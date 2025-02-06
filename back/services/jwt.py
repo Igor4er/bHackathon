@@ -3,12 +3,14 @@ from jose import jwt
 from settings import SETTINGS
 
 ISSUER = "bH"
+ISSUER_REG = "bH+reg"
 
 
-def create_access_token(data: dict, expires_delta: timedelta = timedelta(days=7)):
+def create_access_token(data: dict, expires_delta: timedelta = timedelta(days=7), register: bool = False):
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta
-    to_encode.update({"exp": expire, "iss": ISSUER})
+    to_encode.update({"exp": expire})
+    to_encode.update({"iss": ISSUER_REG if register else ISSUER})
     encoded_jwt = jwt.encode(
         to_encode,
         SETTINGS.jwt_secret_key.get_secret_value(),
@@ -16,13 +18,13 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(days=7)
     )
     return encoded_jwt
 
-def verify_token(token: str):
+def verify_token(token: str, register: bool = False):
     try:
         payload = jwt.decode(
             token,
             SETTINGS.jwt_secret_key.get_secret_value(),
             algorithms=["HS256"],
-            issuer=ISSUER
+            issuer=ISSUER_REG if register else ISSUER
         )
         return payload
     except:
