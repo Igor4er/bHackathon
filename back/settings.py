@@ -7,5 +7,16 @@ class Settings(BaseSettings):
 
     DEBUG: bool = False
 
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_password: SecretStr | None = None
+    redis_username: str | None = None
+    redis_ssl: bool = False
 
-SETTINGS = Settings()
+    jwt_secret_key: SecretStr
+
+    gh_client_id: str
+    gh_client_secret: SecretStr
+
+
+SETTINGS = Settings()  # type: ignore
