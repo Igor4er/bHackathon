@@ -2,10 +2,12 @@ import httpx
 from fastapi import HTTPException
 from http import HTTPStatus
 from settings import SETTINGS
+from dto.user import GitHubUser
 
 
 GH_EXCHANGE_URL = "https://github.com/login/oauth/access_token"
 GH_USER_EMAILS_URL = "https://api.github.com/user/emails"
+GH_USER_PROFILE_URL = "https://api.github.com/user"
 
 
 async def exchange_code_for_token(code: str) -> str:
@@ -77,3 +79,25 @@ async def get_user_email(access_token: str) -> str:
             )
 
         return primary_email
+
+
+async def get_user_profile(access_token: str) -> GitHubUser:
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Accept": "application/json"
+    }
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            GH_USER_PROFILE_URL,
+            headers=headers
+        )
+
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=HTTPStatus.BAD_REQUEST,
+                detail="Failed to fetch user profile"
+            )
+
+        profile = response.json()
+        return GitHubUser.model_validate(profile)

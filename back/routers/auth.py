@@ -1,14 +1,15 @@
 from typing import Annotated
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.params import Depends
-from dto.user import User, Newcomer, CreateProfileRequest
+from dto.user import User, CreateProfileRequest
+from db.models import User as DBUser
 from settings import SETTINGS
 from services.oauth.states import store_oauth_state, verify_oauth_state
-from services.oauth.github import exchange_code_for_token, get_user_email
+from services.oauth.github import exchange_code_for_token, get_user_email, get_user_profile
 from services.jwt import create_access_token
 from urllib.parse import urlencode
 from http import HTTPStatus
-from services.auth import get_user, get_newcomer
+from services.auth import get_user, get_db_user
 from db.models import User as UserModel
 from peewee import DoesNotExist
 
@@ -18,26 +19,29 @@ router = APIRouter(prefix="/auth", tags=["Account system"])
 GH_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
 
 
-def authenticate_user_by_email(email: str):
+async def authenticate_user_by_email(email: str, name: str, avatar_url: str | None = None):
     """
-    Authenticate user by email and return appropriate token response
+    Authenticate user by email and return appropriate token response.
+    If user doesn't exist, create new user with provided name.
     """
+    new_user = False
     try:
         user = UserModel.get(UserModel.email == email)
-        data = {"sub": email, "name": user.name}
-        token = create_access_token(data)
-        return {
-            "new_user": False,
-            "access_token": token,
-            "token_type": "bearer"
-        }
     except DoesNotExist:
-        token = create_access_token({"sub": email}, register=True)
-        return {
-            "new_user": True,
-            "registration_token": token,
-            "token_type": "bearer"
-        }
+        new_user = True
+        user = UserModel.create(
+            email=email,
+            name=name,
+            avatar_url=avatar_url
+        )
+
+    data = {"sub": email, "name": user.name}
+    token = create_access_token(data)
+    return {
+        "new_user": new_user,
+        "access_token": token,
+        "token_type": "bearer"
+    }
 
 
 @router.get("/gh/link")
@@ -64,33 +68,24 @@ async def handle_successful_github_oauth(code: str, state: str):
 
     access_token = await exchange_code_for_token(code)
     user_email = await get_user_email(access_token)
+    user_profile = await get_user_profile(access_token)
 
-    return authenticate_user_by_email(user_email)
+    return await authenticate_user_by_email(user_email, user_profile.login, user_profile.avatar_url)
 
 
-@router.post("/profile")
+@router.post("/profile", status_code=500)
 async def create_profile(
     profile: CreateProfileRequest,
-    newcomer: Annotated[Newcomer, Depends(get_newcomer)]
+    # newcomer: Annotated[Newcomer, Depends(get_newcomer)]
 ):
-    user = UserModel.create(
-        email=newcomer.email,
-        name=profile.name,
-        avatar_url=profile.avatar_url
-    )
-
-    token_data = {
-        "sub": user.email,
-        "name": user.name
-    }
-    token = create_access_token(token_data)
-
-    return {
-        "access_token": token,
-        "token_type": "bearer"
-    }
+    return {"msg": "Under development"}, 500
 
 
 @router.get("/me")
-async def get_myself(user: Annotated[User, Depends(get_user)]) -> User:
-    return user
+async def get_myself(user: Annotated[DBUser, Depends(get_db_user)]) -> dict:
+    print(dir(user))
+    return {
+        "name": user.name,
+        "email": user.email,
+        "avatar_url": user.avatar_url
+    }
