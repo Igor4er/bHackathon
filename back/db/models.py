@@ -1,6 +1,16 @@
 from peewee import Model, CharField, TextField, BooleanField, DateTimeField
 from db.db import db
+import json
 import datetime
+
+
+class JSONField(TextField):
+    def db_value(self, value):
+        return json.dumps(value, separators=(",", ":"))
+
+    def python_value(self, value):
+        if value is not None:
+            return json.loads(value)
 
 
 class Base(Model):
@@ -16,8 +26,6 @@ class User(Base):
     is_active = BooleanField(default=True)
     is_admin = BooleanField(default=False)
 
-    class Meta:
-        table_name = 'users'
 
 class Quest(Base):
     ...
