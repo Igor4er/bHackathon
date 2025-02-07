@@ -13,7 +13,7 @@ from db.models import User as UserModel
 from peewee import DoesNotExist
 
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/auth", tags=["Account system"])
 
 GH_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
 
@@ -92,5 +92,5 @@ async def create_profile(
 
 
 @router.get("/me")
-async def get_myself(user: Annotated[User, Depends(get_user)]):
+async def get_myself(user: Annotated[User, Depends(get_user)]) -> User:
     return user
