@@ -1,6 +1,7 @@
 import { PATHNAMES } from "@/constants/routes";
 import Home from "@/page/Home";
 import Login from "@/page/Login";
+import {Settings} from "@/components/Setting";
 import { FC } from "react";
 import { useRoutes } from 'react-router-dom';
 
@@ -11,7 +12,13 @@ const ROUTES = [
     },
     {
         element: <Home />,
-        path: PATHNAMES.HOME
+        path: PATHNAMES.HOME,
+        children:[
+            {
+                element: <Settings />,
+                path: PATHNAMES.SETTINGS
+            }
+        ]
     },
 ]
 

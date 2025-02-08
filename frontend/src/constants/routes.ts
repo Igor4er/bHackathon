@@ -7,7 +7,7 @@ export const PATHNAMES = {
 
     LOGOUT: "/logout",
 
-    // Profile
-    PROFILE: "/profile",
+    // settings
+    SETTINGS: "/settings",
 
 }
