@@ -8,11 +8,10 @@ async def store_oauth_state() -> str:
     """
     state = secrets.token_urlsafe(16)
     await redis_client.setex(
-        f"oauth2:valid_states:{state}",  # key
-        10 * 60,  # value in seconds
-        "1"
+        f"oauth2:valid_states:{state}", 10 * 60, "1"  # key  # value in seconds
     )
     return state
+
 
 async def verify_oauth_state(state: str) -> bool:
     """

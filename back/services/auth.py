@@ -10,26 +10,25 @@ from peewee import DoesNotExist
 
 oauth2_scheme = HTTPBearer()
 
-async def get_user(token: Annotated[HTTPAuthorizationCredentials, Depends(oauth2_scheme)]) -> User:
+
+async def get_user(
+    token: Annotated[HTTPAuthorizationCredentials, Depends(oauth2_scheme)],
+) -> User:
     payload = verify_token(token.credentials)
     if payload is None:
         raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED,
-            detail="Could not validate credentials"
+            status_code=HTTPStatus.UNAUTHORIZED, detail="Could not validate credentials"
         )
     return User.model_validate(payload)
+
 
 async def get_db_user(user: User = Depends(get_user)) -> DBUser:
     try:
         db_user = DBUser.get(DBUser.email == user.email)
         if not db_user.is_active:
             raise HTTPException(
-                status_code=HTTPStatus.FORBIDDEN,
-                detail="User account is inactive"
+                status_code=HTTPStatus.FORBIDDEN, detail="User account is inactive"
             )
         return db_user
     except DoesNotExist:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND,
-            detail="User not found"
-        )
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")

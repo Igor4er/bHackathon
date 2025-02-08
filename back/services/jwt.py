@@ -11,11 +11,10 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(days=7)
     to_encode.update({"exp": expire})
     to_encode.update({"iss": ISSUER})
     encoded_jwt = jwt.encode(
-        to_encode,
-        SETTINGS.jwt_secret_key.get_secret_value(),
-        algorithm="HS256"
+        to_encode, SETTINGS.jwt_secret_key.get_secret_value(), algorithm="HS256"
     )
     return encoded_jwt
+
 
 def verify_token(token: str):
     try:
@@ -23,7 +22,7 @@ def verify_token(token: str):
             token,
             SETTINGS.jwt_secret_key.get_secret_value(),
             algorithms=["HS256"],
-            issuer=ISSUER
+            issuer=ISSUER,
         )
         return payload
     except:
