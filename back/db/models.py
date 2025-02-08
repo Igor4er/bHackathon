@@ -27,12 +27,11 @@ class User(Base):
     is_admin = BooleanField(default=False)
 
 
-class Quest(Base):
-    ...
+class Quest(Base): ...
 
 
-class Task(Base):
-    ...
+class Task(Base): ...
+
 
 db.connect()
 db.create_tables([User])

@@ -7,9 +7,11 @@ class User(BaseModel):
     email: str = Field(validation_alias="sub")  # For JWT deser.
     name: str
 
+
 class CreateProfileRequest(BaseModel):
     name: str
     avatar_url: str | None = None
+
 
 class GitHubUser(BaseModel):
     login: str
@@ -26,3 +28,19 @@ class GitHubUser(BaseModel):
     following: int
     created_at: datetime
     updated_at: datetime
+
+
+class OAuthLinkResponse(BaseModel):
+    url: str
+
+
+class TokenResponse(BaseModel):
+    new_user: bool
+    access_token: str
+    token_type: str
+
+
+class UserProfileResponse(BaseModel):
+    name: str
+    email: str
+    avatar_url: str | None
