@@ -76,9 +76,9 @@ async def handle_successful_github_oauth(code: str, state: str):
 @router.post("/profile", status_code=500)
 async def create_profile(
     profile: CreateProfileRequest,
-    # newcomer: Annotated[Newcomer, Depends(get_newcomer)]
+    user: Annotated[User, Depends(get_user)]
 ):
-    return {"msg": "Under development"}, 500
+    return user
 
 
 @router.get("/me")
