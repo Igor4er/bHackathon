@@ -2,11 +2,11 @@ from typing import Annotated
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.params import Depends
 from dto.user import (
-    User,
     CreateProfileRequest,
     OAuthLinkResponse,
     TokenResponse,
-    UserProfileResponse
+    UserProfileResponse,
+    UpdateProfileRequest,
 )
 from db.models import User as DBUser
 from settings import SETTINGS
@@ -19,9 +19,11 @@ from services.oauth.github import (
 from services.jwt import create_access_token
 from urllib.parse import urlencode
 from http import HTTPStatus
-from services.auth import get_user, get_db_user
+from services.auth import get_db_user
 from db.models import User as UserModel
 from peewee import DoesNotExist
+from shutil import which
+from pip._vendor.certifi import where
 
 
 router = APIRouter(prefix="/auth", tags=["Account system"])
@@ -74,13 +76,33 @@ async def handle_successful_github_oauth(code: str, state: str) -> TokenResponse
     )
 
 
-@router.post(
-    "/profile",
-)
-async def create_profile(
-    profile: CreateProfileRequest, user: Annotated[User, Depends(get_user)]
-):
-    return user
+@router.patch("/profile", response_model=UserProfileResponse)
+async def update_profile(
+    profile: UpdateProfileRequest, user: Annotated[DBUser, Depends(get_db_user)]
+) -> UserProfileResponse:
+    try:
+        update_data = {
+            key: value for key, value in profile.dict().items() if value is not None
+        }
+
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No valid fields to update")
+
+        query = DBUser.update(**update_data).where(DBUser.email == user.email)
+        query.execute()
+
+        user = user.get()
+
+        return UserProfileResponse(
+            name=str(user.name),
+            email=str(user.email),
+            avatar_url=str(user.avatar_url) if user.avatar_url is not None else None,
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to update profile: {str(e)}"
+        )
 
 
 @router.get("/me", response_model=UserProfileResponse)
