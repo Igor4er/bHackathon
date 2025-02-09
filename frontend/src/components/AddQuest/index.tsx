@@ -3,11 +3,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog } from "@/components/ui/dialog";
+
+import { AddTask } from "../AddTask";
 
 import { Minus, Plus, Pencil, Users, Clock } from "lucide-react";
 
 export const AddQuest: FC = () => {
   const [blocks, setBlocks] = useState([{ id: 1 }]);
+  const [openModal, setOpenModal] = useState(false);
 
   const handleAddBlock = () => {
     setBlocks([...blocks, { id: blocks.length + 1 }]);
@@ -88,7 +92,13 @@ export const AddQuest: FC = () => {
                   <Input placeholder="Enter block name" className="w-[500px]" />
                 </div>
                 <CardContent className="p-0">
-                  <Button variant="default">
+                  <Button
+                    variant="default"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setOpenModal(true);
+                    }}
+                  >
                     Add task <Plus size={16} />
                   </Button>
                 </CardContent>
@@ -115,6 +125,10 @@ export const AddQuest: FC = () => {
             Add Quest <span className="text-xl">👾</span>
           </Button>
         </div>
+
+        <Dialog open={openModal} onOpenChange={(state) => setOpenModal(state)}>
+          <AddTask />
+        </Dialog>
       </form>
     </section>
   );
