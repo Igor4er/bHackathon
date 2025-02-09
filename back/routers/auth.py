@@ -1,12 +1,13 @@
 from typing import Annotated
-from fastapi import APIRouter, Request, HTTPException
-from fastapi.params import Depends
+from fastapi import APIRouter, Request, HTTPException, Depends
 from dto.user import (
-    CreateProfileRequest,
-    OAuthLinkResponse,
-    TokenResponse,
     UserProfileResponse,
     UpdateProfileRequest
+)
+from dto.auth import (
+    OAuthLinkResponse,
+    TokenResponse,
+    EmailSendResponse
 )
 from db.models import User as DBUser
 from settings import SETTINGS
@@ -16,14 +17,14 @@ from services.oauth.github import (
     get_user_email,
     get_user_profile,
 )
-from services.jwt import create_access_token
+from services.jwt import create_access_token, verify_email_code
 from urllib.parse import urlencode
 from http import HTTPStatus
 from services.auth import get_db_user
 from db.models import User as UserModel
 from peewee import DoesNotExist
-from shutil import which
-from pip._vendor.certifi import where
+from services.email.messages import send_confirmation_email
+from services.email.rate_limit import check_email_rate_limit
 
 
 router = APIRouter(prefix="/auth", tags=["Account system"])
@@ -50,6 +51,16 @@ async def authenticate_user_by_email(
     return TokenResponse(new_user=new_user, access_token=token, token_type="bearer")
 
 
+async def verify_state(state: str):
+    state_valid = await verify_oauth_state(state)
+    if not state_valid:
+        raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail="Invalid state parameter"
+        )
+    return state
+
+
 @router.get("/gh/link", response_model=OAuthLinkResponse)
 async def github_oauth_link(request: Request) -> OAuthLinkResponse:
     state = await store_oauth_state()
@@ -59,14 +70,7 @@ async def github_oauth_link(request: Request) -> OAuthLinkResponse:
 
 
 @router.get("/gh/token", response_model=TokenResponse)
-async def handle_successful_github_oauth(code: str, state: str) -> TokenResponse:
-    # Verify the state parameter
-    state_valid = await verify_oauth_state(state)
-    if not state_valid:
-        raise HTTPException(
-            status_code=HTTPStatus.UNAUTHORIZED, detail="Invalid state parameter"
-        )
-
+async def handle_successful_github_oauth(code: str, state: Annotated[str, (verify_state)]) -> TokenResponse:
     access_token = await exchange_code_for_token(code)
     user_email = await get_user_email(access_token)
     user_profile = await get_user_profile(access_token)
@@ -120,4 +124,48 @@ async def get_myself(
         name=str(user.name),
         email=str(user.email),
         avatar_url=str(user.avatar_url) if user.avatar_url is not None else None,
+    )
+
+
+@router.post(
+    "/em/send",
+    response_model=EmailSendResponse,
+    responses={
+        HTTPStatus.TOO_MANY_REQUESTS: {
+            "description": "Rate limit exceeded"
+        }
+    })
+async def send_email(
+    email: str,
+    user: Annotated[DBUser, Depends(get_db_user)]
+) -> EmailSendResponse:
+    await check_email_rate_limit(email)  # raises HTTPException if sending limited
+
+    state = await store_oauth_state()
+    try:
+        await send_confirmation_email(state, email)
+        return EmailSendResponse(
+            status="success",
+            message=f"Email will be sent to: {email}",
+            from_email=SETTINGS.email_sender
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process email request: {str(e)}"
+        )
+
+
+@router.get("/em/token", response_model=TokenResponse)
+async def handle_successful_email_token(code: str, state: Annotated[str, (verify_state)]) -> TokenResponse:
+    user_email = verify_email_code(code)
+    if user_email is None:
+        raise HTTPException(
+            status_code=HTTPStatus.UNAUTHORIZED,
+            detail="Invalid code"
+        )
+    user_name = user_email.split("@")[0]
+
+    return await authenticate_user_by_email(
+        user_email, user_name, avatar_url=None
     )

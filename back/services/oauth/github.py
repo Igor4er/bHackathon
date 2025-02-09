@@ -2,7 +2,7 @@ import httpx
 from fastapi import HTTPException
 from http import HTTPStatus
 from settings import SETTINGS
-from dto.user import GitHubUser
+from dto.auth import GitHubUser
 
 
 GH_EXCHANGE_URL = "https://github.com/login/oauth/access_token"
