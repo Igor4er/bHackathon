@@ -1,8 +1,8 @@
 import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, LogOut } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Plus, LogOut, Pencil } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 import { Settings } from "../Setting";
 import { Dialog } from "@/components/ui/dialog";
@@ -14,31 +14,42 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
+import { PATHNAMES } from "@/constants/routes";
+
 export const Header: FC = () => {
   const [openEditModal, setOpenEditModal] = useState(false);
+  const navigate = useNavigate();
+
+  const handleCreateQuestClick = () => {
+    navigate(PATHNAMES.ADDQUEST);
+  };
 
   return (
     <header className="w-full border-b bg-white">
       <div className="container mx-auto flex items-center justify-between px-4 py-4 lg:px-8">
-        <Button className="flex items-center gap-2" variant="default">
+        <Button
+          className="flex items-center gap-2"
+          variant="default"
+          onClick={handleCreateQuestClick}
+        >
           <Plus size={16} /> Create Quest
         </Button>
 
         <nav className="flex gap-20">
           <Link to="/popular-quests" className="text-gray-700 hover:text-black">
-            Popular Quests
+            • Popular Quests •
           </Link>
           <Link
             to="/completed-quests"
             className="text-gray-700 hover:text-black"
           >
-            Completed Quests
+            • Completed Quests •
           </Link>
           <Link
             to="/popular-authors"
             className="text-gray-700 hover:text-black"
           >
-            Popular Authors
+            • Popular Authors •
           </Link>
         </nav>
 
@@ -54,6 +65,7 @@ export const Header: FC = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onSelect={() => setOpenEditModal(true)}>
+              <Pencil size={16} />
               Edit Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
