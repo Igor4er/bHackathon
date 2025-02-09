@@ -35,9 +35,6 @@ router = APIRouter(prefix="/auth", tags=["Account system"])
 
 GH_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
 GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/auth"
-GOOGLE_REDIRECT_URI = "http://localhost:8000/auth/google/callback"
-
-
 
 async def authenticate_user_by_email(
     email: str, name: str, avatar_url: str | None = None
@@ -77,7 +74,7 @@ async def github_oauth_link(request: Request) -> OAuthLinkResponse:
 
 
 @router.get("/gh/token", response_model=TokenResponse)
-async def handle_successful_github_oauth(code: str, state: Annotated[str, (verify_state)]) -> TokenResponse:
+async def handle_successful_github_oauth(code: str, state: Annotated[str, Depends(verify_state)]) -> TokenResponse:
     access_token = await exchange_code_for_token(code)
     user_email = await get_user_email(access_token)
     user_profile = await get_user_profile(access_token)
@@ -92,7 +89,7 @@ async def google_oauth_link(request: Request) -> OAuthLinkResponse:
     state = await store_oauth_state(prefix="google")
     params = {
         "client_id": SETTINGS.google_client_id,
-        "redirect_uri": GOOGLE_REDIRECT_URI,
+        "redirect_uri": f"{SETTINGS.frontend_url}/login",
         "response_type": "code",
         "scope": "openid email profile",
         "access_type": "offline",
@@ -104,12 +101,11 @@ async def google_oauth_link(request: Request) -> OAuthLinkResponse:
 
 
 @router.get("/google/token", response_model=TokenResponse)
-async def handle_successful_google_oauth(code: str, state: Annotated[str, (verify_state)]) -> TokenResponse:
+async def handle_successful_google_oauth(code: str, state: Annotated[str, Depends(verify_state)]) -> TokenResponse:
     access_token = await google_exchange_code_for_token(code)
     user_profile = await google_get_user_profile(access_token)
-
     return await authenticate_user_by_email(
-        user_profile.email, user_profile.login, user_profile.picture
+        user_profile.email, user_profile.name, user_profile.picture
     )
     
 
