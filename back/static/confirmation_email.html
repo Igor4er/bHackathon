@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your Email</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f8f8f8;
+            color: #1a1a1a;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .header {
+            padding: 32px;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .logo {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 16px;
+        }
+        .content {
+            padding: 32px;
+            line-height: 1.6;
+        }
+        .button {
+            display: inline-block;
+            padding: 14px 32px;
+            margin: 24px 0;
+            background-color: #000000;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            text-align: center;
+        }
+        .button:hover {
+            background-color: #333333;
+        }
+        .footer {
+            padding: 24px 32px;
+            text-align: center;
+            color: #666666;
+            font-size: 14px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .center {
+            text-align: center;
+        }
+        .note {
+            margin-top: 24px;
+            font-size: 14px;
+            color: #666666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="/api/placeholder/48/48" alt="Logo" class="logo">
+            <h1 style="margin: 0; font-size: 24px;">Confirm Your Email</h1>
+        </div>
+        
+        <div class="content">
+            <p>Hello!</p>
+            
+            <p>Thank you for signing up. To complete your registration and access your account, please click the button below:</p>
+            
+            <div class="center">
+                <a href="{{confirmation_link}}" class="button">Confirm Email</a>
+            </div>
+            
+            
+        </div>
+      
+    </div>
+</body>
+</html>
