@@ -17,6 +17,10 @@ from services.oauth.github import (
     get_user_email,
     get_user_profile,
 )
+from services.oauth.google import (
+    exchange_code_for_token as google_exchange_code_for_token,
+    get_user_profile as google_get_user_profile,
+)
 from services.jwt import create_access_token, verify_email_code
 from urllib.parse import urlencode
 from http import HTTPStatus
@@ -30,6 +34,9 @@ from services.email.rate_limit import check_email_rate_limit
 router = APIRouter(prefix="/auth", tags=["Account system"])
 
 GH_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
+GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/auth"
+GOOGLE_REDIRECT_URI = "http://localhost:8000/auth/google/callback"
+
 
 
 async def authenticate_user_by_email(
@@ -79,6 +86,32 @@ async def handle_successful_github_oauth(code: str, state: Annotated[str, (verif
         user_email, user_profile.login, user_profile.avatar_url
     )
 
+
+@router.get("/google/link", response_model=OAuthLinkResponse)
+async def google_oauth_link(request: Request) -> OAuthLinkResponse:
+    state = await store_oauth_state(prefix="google")
+    params = {
+        "client_id": SETTINGS.google_client_id,
+        "redirect_uri": GOOGLE_REDIRECT_URI,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "offline",
+        "prompt": "consent",
+        "state": state
+    }
+    full_url = f"{GOOGLE_AUTHORIZE_URL}?{urlencode(params)}"
+    return OAuthLinkResponse(url=full_url)
+
+
+@router.get("/google/token", response_model=TokenResponse)
+async def handle_successful_google_oauth(code: str, state: Annotated[str, (verify_state)]) -> TokenResponse:
+    access_token = await google_exchange_code_for_token(code)
+    user_profile = await google_get_user_profile(access_token)
+
+    return await authenticate_user_by_email(
+        user_profile.email, user_profile.login, user_profile.picture
+    )
+    
 
 @router.patch("/profile", response_model=UserProfileResponse)
 async def update_profile(

@@ -27,6 +27,18 @@ class GitHubUser(BaseModel):
     updated_at: datetime
 
 
+class GoogleUser(BaseModel):
+    id: str
+    email: str
+    verified_email: bool
+    name: Optional[str] = None
+    given_name: Optional[str] = None
+    family_name: Optional[str] = None
+    picture: Optional[str] = None
+    locale: Optional[str] = None
+    hd: Optional[str] = None  # Hosted domain (e.g., for Google Workspace users)
+
+
 class OAuthLinkResponse(BaseModel):
     url: str
 
