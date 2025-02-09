@@ -10,7 +10,8 @@ import GoogleIcon from "@/assets/icon/google.svg";
 import {
   loginWithGitHub,
   loginWithGoogle,
-  handleAuthRedirect
+  handleAuthRedirect,
+  getAuthEmail
 } from "@/services/api-login";
 
 interface LoginFormProps extends React.ComponentPropsWithoutRef<"div"> {
@@ -44,8 +45,9 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
     }
   }, [location.search, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
+    await getAuthEmail(email);
     // Handle email login logic here
     console.log("Email login:", email);
   };
@@ -76,7 +78,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" >
               Login
             </Button>
           </div>

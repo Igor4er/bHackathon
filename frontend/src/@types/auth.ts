@@ -3,8 +3,12 @@ export enum AuthStatus {
     UNAUTHORIZED = "unauthorized",
   }
 
+
 export  interface AuthResponse {
-    url: string;
+    url?: string;
+    status?: string;
+    message?: string;
+    from_email? : string;
   }
   
   export  interface TokenResponse {

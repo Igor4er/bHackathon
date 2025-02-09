@@ -1,9 +1,19 @@
+import { AuthResponse, TokenResponse, UserData } from "@/@types/auth";
+import { PATHNAMES } from "@/constants/routes";
 import axios from "axios";
 import { NavigateFunction } from "react-router-dom";
-import { PATHNAMES } from "@/constants/routes";
-import { AuthResponse, TokenResponse, UserData } from "@/@types/auth";
 
 const BASE_URL = "http://localhost:8000/auth";
+
+export const getAuthEmail = async(email: string): Promise<AuthResponse> => {
+  try {
+    const response = await axios.post(`${BASE_URL}/em/send?email=${email}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Failed to fetch email auth data:`, error);
+    throw new Error(`Failed to fetch email auth data`);
+  }
+}
 
 const getAuthData = async (provider: 'gh' | 'google'): Promise<AuthResponse> => {
   try {
@@ -50,6 +60,9 @@ export const loginWithProvider = async (provider: 'gh' | 'google'): Promise<void
     localStorage.setItem("state", state);
     localStorage.setItem("provider", provider); 
     const { url } = await getAuthData(provider);
+    if (!url) {
+      throw new Error("Authentication URL is undefined");
+    }
     window.location.href = url;
   } catch (error) {
     console.error(`${provider} login failed:`, error);
