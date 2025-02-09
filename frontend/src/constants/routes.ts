@@ -1,13 +1,14 @@
 export const PATHNAMES = {
-    HOME: "/",
+  HOME: "/",
 
-    // Auth
-    LOGIN: "/login",
-    LOGIN_GITHUB: "/login/github",
+  // Auth
+  LOGIN: "/login",
+  LOGIN_GITHUB: "/login/github",
 
-    LOGOUT: "/logout",
+  LOGOUT: "/logout",
 
-    // settings
-    SETTINGS: "/settings",
+  // settings
+  SETTINGS: "/settings",
 
-}
+  ADDQUEST: "/add-quest",
+};
