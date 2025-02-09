@@ -136,8 +136,7 @@ async def get_myself(
         }
     })
 async def send_email(
-    email: str,
-    user: Annotated[DBUser, Depends(get_db_user)]
+    email: str
 ) -> EmailSendResponse:
     await check_email_rate_limit(email)  # raises HTTPException if sending limited
 
