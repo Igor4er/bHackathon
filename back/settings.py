@@ -18,5 +18,10 @@ class Settings(BaseSettings):
     gh_client_id: str
     gh_client_secret: SecretStr
 
+    resend_api_key: SecretStr
+    email_sender: str
+
+    frontend_url: str
+
 
 SETTINGS = Settings()  # type: ignore
