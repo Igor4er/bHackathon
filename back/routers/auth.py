@@ -70,13 +70,13 @@ async def github_oauth_link(request: Request) -> OAuthLinkResponse:
 
 
 @router.get("/gh/token", response_model=TokenResponse)
-async def handle_successful_github_oauth(code: str, state: Annotated[str, (verify_state)]) -> TokenResponse:
+async def handle_successful_github_oauth(code: str, state: Annotated[str, Depends(verify_state)]) -> TokenResponse:
     access_token = await exchange_code_for_token(code)
     user_email = await get_user_email(access_token)
     user_profile = await get_user_profile(access_token)
 
     return await authenticate_user_by_email(
-        user_email, user_profile.login, user_profile.avatar_url
+        user_email, user_profile.login if user_profile.name is None else user_profile.name, user_profile.avatar_url
     )
 
 
@@ -156,7 +156,7 @@ async def send_email(
 
 
 @router.get("/em/token", response_model=TokenResponse)
-async def handle_successful_email_token(code: str, state: Annotated[str, (verify_state)]) -> TokenResponse:
+async def handle_successful_email_token(code: str, state: Annotated[str, Depends(verify_state)]) -> TokenResponse:
     user_email = verify_email_code(code)
     if user_email is None:
         raise HTTPException(
