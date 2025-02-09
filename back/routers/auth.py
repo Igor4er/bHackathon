@@ -6,7 +6,7 @@ from dto.user import (
     OAuthLinkResponse,
     TokenResponse,
     UserProfileResponse,
-    UpdateProfileRequest,
+    UpdateProfileRequest
 )
 from db.models import User as DBUser
 from settings import SETTINGS
@@ -78,15 +78,20 @@ async def handle_successful_github_oauth(code: str, state: str) -> TokenResponse
 
 @router.patch("/profile", response_model=UserProfileResponse)
 async def update_profile(
-    profile: UpdateProfileRequest, user: Annotated[DBUser, Depends(get_db_user)]
+    profile: UpdateProfileRequest,
+    user: Annotated[DBUser, Depends(get_db_user)]
 ) -> UserProfileResponse:
     try:
         update_data = {
-            key: value for key, value in profile.dict().items() if value is not None
+            key: value for key, value in profile.dict().items()
+            if value is not None
         }
 
         if not update_data:
-            raise HTTPException(status_code=400, detail="No valid fields to update")
+            raise HTTPException(
+                status_code=400,
+                detail="No valid fields to update"
+            )
 
         query = DBUser.update(**update_data).where(DBUser.email == user.email)
         query.execute()
@@ -96,12 +101,13 @@ async def update_profile(
         return UserProfileResponse(
             name=str(user.name),
             email=str(user.email),
-            avatar_url=str(user.avatar_url) if user.avatar_url is not None else None,
+            avatar_url=str(user.avatar_url) if user.avatar_url is not None else None
         )
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to update profile: {str(e)}"
+            status_code=500,
+            detail=f"Failed to update profile: {str(e)}"
         )
 
 
