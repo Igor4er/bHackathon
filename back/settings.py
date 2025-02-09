@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     frontend_url: str
 
     AWS_ACCESS_KEY_ID: str
-    AWS_SECRET_ACCESS_KEY: str
+    AWS_SECRET_ACCESS_KEY: SecretStr
     AWS_REGION: str
     S3_BUCKET_NAME: str
 

@@ -3,14 +3,14 @@ from fastapi import APIRouter, File, UploadFile, HTTPException
 from settings import SETTINGS
 from services.s3_client import s3_client
 
-router = APIRouter(prefix="/media", tags=["Account system"])
+router = APIRouter(prefix="/media", tags=["Media"])
 
 @router.post("/upload_file/")
 async def upload_file(file: UploadFile = File(...)):
     try:
         file_key = f"uploads/{file.filename}"  # Path inside the bucket
 
-        s3_client.upload_fileobj(file.file, SETTINGS.S3_BUCKET_NAME, file_key, ExtraArgs={"ACL": "public-read"})
+        s3_client.upload_fileobj(file.file, SETTINGS.S3_BUCKET_NAME, file_key)
 
         file_url = f"https://{SETTINGS.S3_BUCKET_NAME}.s3.{SETTINGS.AWS_REGION}.amazonaws.com/{file_key}"
 
