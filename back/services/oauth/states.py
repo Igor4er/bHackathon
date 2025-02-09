@@ -2,11 +2,11 @@ from db.redis import redis_client
 import secrets
 
 
-async def store_oauth_state() -> str:
+async def store_oauth_state(prefix: str) -> str:
     """
     Generate and store a new OAuth state token in Redis.
     """
-    state = secrets.token_urlsafe(16)
+    state = f"{prefix}:{secrets.token_urlsafe(16)}"
     await redis_client.setex(
         f"oauth2:valid_states:{state}", 10 * 60, "1"  # value in seconds
     )

@@ -63,7 +63,7 @@ async def verify_state(state: str):
 
 @router.get("/gh/link", response_model=OAuthLinkResponse)
 async def github_oauth_link(request: Request) -> OAuthLinkResponse:
-    state = await store_oauth_state()
+    state = await store_oauth_state(prefix="github")
     params = {"client_id": SETTINGS.gh_client_id, "scope": "user:email", "state": state}
     full_url = f"{GH_AUTHORIZE_URL}?{urlencode(params)}"
     return OAuthLinkResponse(url=full_url)
@@ -141,7 +141,7 @@ async def send_email(
 ) -> EmailSendResponse:
     await check_email_rate_limit(email)  # raises HTTPException if sending limited
 
-    state = await store_oauth_state()
+    state = await store_oauth_state(prefix="email")
     try:
         await send_confirmation_email(state, email)
         return EmailSendResponse(
