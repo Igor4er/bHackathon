@@ -3,7 +3,6 @@ export const PATHNAMES = {
 
   // Auth
   LOGIN: "/login",
-  LOGIN_GITHUB: "/login/github",
 
   LOGOUT: "/logout",
 
