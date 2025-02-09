@@ -18,10 +18,18 @@ class Settings(BaseSettings):
     gh_client_id: str
     gh_client_secret: SecretStr
 
+    google_client_id: str
+    google_client_secret: SecretStr
+
     resend_api_key: SecretStr
     email_sender: str
 
     frontend_url: str
+
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: SecretStr
+    AWS_REGION: str
+    S3_BUCKET_NAME: str
 
 
 SETTINGS = Settings()  # type: ignore
