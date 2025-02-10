@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, UUID4
+from typing import List
+from dto.quests import UserAnswer
 
 
 class User(BaseModel):
@@ -14,3 +16,10 @@ class UserProfileResponse(BaseModel):
 class UpdateProfileRequest(BaseModel):
     name: str | None = None
     avatar_url: str | None = None
+
+
+class UserState(BaseModel):
+    of_user: UUID4
+    answers: List[UserAnswer]
+
+UserState.update_forward_refs()

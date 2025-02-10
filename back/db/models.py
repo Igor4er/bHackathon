@@ -1,4 +1,4 @@
-from peewee import Model, CharField, TextField, BooleanField, DateTimeField
+from peewee import Model, CharField, TextField, BooleanField, DateTimeField, ForeignKeyField, IntegerField
 from db.db import db
 import json
 import datetime
@@ -27,12 +27,16 @@ class User(Base):
     is_admin = BooleanField(default=False)
 
 
-class Quest(Base): ...
-
-
-class Task(Base): ...
+class Quest(Base):
+    author = ForeignKeyField(User, backref='quests')
+    name = CharField()
+    desc = TextField()
+    quest_body = JSONField()  # Will contain QuestBlock DTO
+    max_players = IntegerField(default=1)
+    max_attempts = IntegerField(default=1)
+    created_at = DateTimeField(default=datetime.datetime.now)
 
 
 db.connect()
-db.create_tables([User])
+db.create_tables([User, Quest])
 db.close()
