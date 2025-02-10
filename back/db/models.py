@@ -1,4 +1,4 @@
-from peewee import Model, CharField, TextField, BooleanField, DateTimeField, ForeignKeyField, IntegerField
+from peewee import AutoField, Model, CharField, TextField, BooleanField, DateTimeField, ForeignKeyField, IntegerField
 from db.db import db
 import json
 import datetime
@@ -28,6 +28,7 @@ class User(Base):
 
 
 class Quest(Base):
+    id = AutoField(primary_key=True)
     author = ForeignKeyField(User, backref='quests')
     name = CharField()
     desc = TextField()
