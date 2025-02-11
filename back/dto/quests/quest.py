@@ -1,28 +1,11 @@
-from pydantic import BaseModel, UUID4, Field
+from pydantic import BaseModel, Field
 from typing import Dict, Optional, List
 from datetime import timedelta, datetime
-from uuid import UUID
 from .questions import Question
 
 
-class UUIDStrKey(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v, info):
-        if isinstance(v, UUID):
-            return str(v)
-        try:
-            UUID(str(v))
-            return str(v)
-        except ValueError:
-            raise ValueError(f"Invalid UUID: {v}")
-
-
 class QuestBlock(BaseModel):
-    questions: Dict[UUIDStrKey, Question] = Field(
+    questions: Dict[str, Question] = Field(
             description="Dictionary of questions with UUID keys",
             examples=[{
                 "550e8400-e29b-41d4-a716-446655440000": {
