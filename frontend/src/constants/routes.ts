@@ -4,8 +4,6 @@ export const PATHNAMES = {
   // Auth
   LOGIN: "/login",
 
-  LOGOUT: "/logout",
-
   // settings
   SETTINGS: "/settings",
 

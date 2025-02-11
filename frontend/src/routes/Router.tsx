@@ -5,25 +5,37 @@ import AddQuest from "@/page/AddQuest";
 import { Settings } from "@/components/Setting";
 import { FC } from "react";
 import { useRoutes } from "react-router-dom";
+import PrivateRoute from "@/components/PrivateRoute";
+import PublicRoute from "@/components/PublicRoute";
 
 const ROUTES = [
   {
-    element: <Login />,
-    path: PATHNAMES.LOGIN,
-  },
-  {
-    element: <Home />,
-    path: PATHNAMES.HOME,
+    element: <PublicRoute />, 
     children: [
       {
-        element: <Settings />,
-        path: PATHNAMES.SETTINGS,
+        element: <Login />,
+        path: PATHNAMES.LOGIN,
       },
     ],
   },
   {
-    element: <AddQuest />,
-    path: PATHNAMES.ADDQUEST,
+    element: <PrivateRoute />, 
+    children: [
+      {
+        element: <Home />,
+        path: PATHNAMES.HOME,
+        children: [
+          {
+            element: <Settings />,
+            path: PATHNAMES.SETTINGS,
+          },
+          {
+            element: <AddQuest />,
+            path: PATHNAMES.ADDQUEST,
+          },
+        ],
+      },
+    ],
   },
 ];
 

@@ -3,6 +3,7 @@ import { AuthResponse, TokenResponse, UserData } from "@/@types/auth";
 import { PATHNAMES } from "@/constants/routes";
 import { NavigateFunction } from "react-router-dom";
 
+
 const api = axios.create({
   baseURL: "http://localhost:8000/auth",
   headers: { Accept: "application/json" },
@@ -12,8 +13,8 @@ export const getAuthEmail = async (email: string): Promise<AuthResponse> => {
   try {
     const { data } = await api.post(`/em/send`, null, { params: { email } });
     return data;
-  } catch (error) {
-    console.error("Failed to fetch email auth data:", error);
+  } catch (error: any) {
+    console.error("Failed to fetch email auth data:", error.response?.data?.detail);
     throw new Error("Failed to fetch email auth data");
   }
 };

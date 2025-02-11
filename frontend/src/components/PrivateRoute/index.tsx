@@ -1,35 +1,25 @@
-import React from "react";
-import { Navigate } from "react-router-dom";
-import { PATHNAMES } from "src/constants/routes";
-// import { ScreenLoader } from "../Loader/ScreenLoader";
-import { ONLY_FOR, OnlyFor } from "./types";
+import { Navigate, Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { PATHNAMES } from "@/constants/routes";
 
-interface Props {
-  component: React.FC;
-  onlyFor?: OnlyFor;
-  redirectUrl?: string;
-}
+const PrivateRoute = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
+    !!localStorage.getItem("access_token")
+  );
 
-export const PrivateRoute = ({
-  component: Component,
-  onlyFor = ONLY_FOR.AUTHORIZED,
-  redirectUrl = PATHNAMES.LOGIN,
-}: Props) => {
-  // TODO: Отримати статус авторизації користувача після додавання запиту
-  const isAuthorized = false; //! Тимчасова заглушка
-  const isLoading = false; //! Заглушка для майбутнього стану завантаження
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setIsAuthenticated(!!localStorage.getItem("access_token"));
+    };
 
-  const { AUTHORIZED, UNAUTHORIZED } = ONLY_FOR;
+    window.addEventListener("storage", handleStorageChange);
 
-  if (isLoading) return ; //<ScreenLoader /> //! додати лоадер
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
-  if (onlyFor === AUTHORIZED && isAuthorized) {
-    return <Component />;
-  }
-
-  if (onlyFor === UNAUTHORIZED && !isAuthorized) {
-    return <Component />;
-  }
-
-  return <Navigate to={redirectUrl} replace />;
+  return isAuthenticated ? <Outlet /> : <Navigate to={PATHNAMES.LOGIN} replace />;
 };
+
+export default PrivateRoute;

@@ -24,6 +24,11 @@ export const Header: FC = () => {
     navigate(PATHNAMES.ADDQUEST);
   };
 
+  const handleLogOut = () => {
+    localStorage.removeItem("access_token");
+    navigate(PATHNAMES.LOGIN);
+  }
+
   return (
     <header className="w-full border-b bg-white">
       <div className="container mx-auto flex items-center justify-between px-4 py-4 lg:px-8">
@@ -69,7 +74,7 @@ export const Header: FC = () => {
               Edit Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center gap-2 text-red-500">
+            <DropdownMenuItem className="flex items-center gap-2 text-red-500" onClick={handleLogOut}>
               <LogOut size={16} />
               Log Out
             </DropdownMenuItem>

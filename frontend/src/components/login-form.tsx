@@ -16,7 +16,7 @@ import {
 } from "@/services/api-login";
 import {
   AlertDialog,
-  AlertDialogCancel,
+  AlertDialogAction,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -60,8 +60,13 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await getAuthEmail(email);
-    setShowDialog(true);
+    try{
+      await getAuthEmail(email);
+      setShowDialog(true);
+    } catch(error: any){
+      console.log(error.response?.data?.detail);
+    }
+   
   };
 
   return (
@@ -113,9 +118,9 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setShowDialog(false)}>
+              <AlertDialogAction onClick={() => setShowDialog(false)}>
                 Close
-              </AlertDialogCancel>
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
