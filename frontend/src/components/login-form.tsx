@@ -22,19 +22,23 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
+  const [authType, setAuthType] = useState<string | null>(null);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
     const code = urlParams.get("code");
     const state = urlParams.get("state");
-    console.log("code:", code, "state:", state);
-
+    
     if (code && state) {
+      // Extract auth type from state (everything before the colon)
+      const extractedAuthType = state.split(':')[0];
+      setAuthType(extractedAuthType);
+      console.log("Auth type:", extractedAuthType);
+
       const handleRedirect = async () => {
         try {
           const userData = await handleAuthRedirect(code, state, navigate);
           if (!userData) {
-            // Handle login failure
             console.error("Authentication failed");
           }
         } catch (error) {
@@ -48,12 +52,16 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     await getAuthEmail(email);
-    // Handle email login logic here
     console.log("Email login:", email);
   };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
+      {authType && (
+        <div className="text-center text-sm text-muted-foreground">
+          Authenticating with {authType}...
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center gap-2">
@@ -65,7 +73,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
             </a>
             <h1 className="text-xl font-bold">Welcome back</h1>
           </div>
-          
+         
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
@@ -78,17 +86,17 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full" >
+            <Button type="submit" className="w-full">
               Login
             </Button>
           </div>
-          
+         
           <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
             <span className="relative z-10 bg-background px-2 text-muted-foreground">
               Or
             </span>
           </div>
-          
+         
           <div className="grid gap-4 sm:grid-cols-2">
             <Button
               variant="outline"
@@ -99,7 +107,7 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
               <img src={GitHubIcon} className="w-6 h-6" alt="GitHub" />
               Continue with GitHub
             </Button>
-            
+           
             <Button
               variant="outline"
               className="w-full"
