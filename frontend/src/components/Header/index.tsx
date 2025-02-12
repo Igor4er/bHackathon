@@ -61,7 +61,7 @@ export const Header: FC = () => {
   const handleCreateQuestClick = () => {
     navigate(PATHNAMES.ADDQUEST);
   };
-
+console.log();
   const handleLogOut = () => {
     localStorage.removeItem("access_token");
     navigate(PATHNAMES.LOGIN);

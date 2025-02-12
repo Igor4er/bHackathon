@@ -19,25 +19,6 @@ interface FormDataType {
   description: string;
   maxPlayers: number;
   timeLimit: number;
-  questBody?: Array<{
-    allow_changing_answers: boolean;
-    allow_switching_questions: boolean;
-    randomize_questions: boolean;
-    questions: Record<
-      string,
-      {
-        descr: string;
-        type: "choose" | "extended";
-        options?: Array<{
-          is_correct: boolean;
-          text: string;
-        }>;
-        answer?: string;
-        files?: { [key: number]: File };
-        questionFile?: File | null;
-      }
-    >;
-  }>;
 }
 
 const initialFormData: FormDataType = {
@@ -51,7 +32,8 @@ export const AddQuest: FC = () => {
   const [blocks, setBlocks] = useState<Block[]>([{ id: uuidv4(), name: "" }]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<FormDataType>(initialFormData);
-  const [tasks, setTasks] = useState<any[]>([]); 
+  const [tasks, setTasks] = useState<Record<string, any>>({});
+  const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
 
   const handleAddBlock = () => {
     setBlocks((prevBlocks) => [...prevBlocks, { id: uuidv4(), name: "" }]);
@@ -59,6 +41,11 @@ export const AddQuest: FC = () => {
 
   const handleRemoveBlock = (blockId: string) => {
     setBlocks((prevBlocks) => prevBlocks.filter((block) => block.id !== blockId));
+    setTasks((prevTasks) => {
+      const newTasks = { ...prevTasks };
+      delete newTasks[blockId];
+      return newTasks;
+    });
   };
 
   const handleBlockNameChange = (blockId: string, name: string) => {
@@ -75,9 +62,23 @@ export const AddQuest: FC = () => {
     }));
   };
 
+  const handleAddTaskClick = (blockId: string) => {
+    setActiveBlockId(blockId);
+    setIsModalOpen(true);
+  };
+
   const handleTaskSubmit = (taskData: any) => {
-    setTasks((prev) => [...prev, taskData]);
-    setIsModalOpen(false);
+    if (activeBlockId) {
+      setTasks((prevTasks) => ({
+        ...prevTasks,
+        [activeBlockId]: {
+          ...(prevTasks[activeBlockId] || {}),
+          ...taskData,
+        },
+      }));
+      setIsModalOpen(false);
+      setActiveBlockId(null);
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -88,36 +89,31 @@ export const AddQuest: FC = () => {
         throw new Error("Please fill in all required fields");
       }
 
-      const mergedQuestions = tasks.reduce((acc, task) => ({ ...acc, ...task }), {});
-
       const questData = {
         name: formData.name,
         desc: formData.description,
         max_players: formData.maxPlayers,
         max_attempts: 3,
-        quest_body: [
-          {
-            allow_changing_answers: true,
-            allow_switching_questions: true,
-            randomize_questions: true,
-            questions: mergedQuestions,
-          },
-        ],
+        quest_body: blocks.map((block) => ({
+          name: block.name,
+          allow_changing_answers: true,
+          allow_switching_questions: true,
+          randomize_questions: true,
+          questions: tasks[block.id] || {},
+        })),
       };
-
 
       const response = await createQuest(questData);
       console.log("Quest created successfully:", response);
 
+      // Clear form data after successful creation
       setFormData(initialFormData);
-      setTasks([]);
+      setTasks({});
       setBlocks([{ id: uuidv4(), name: "" }]);
-
     } catch (error) {
       console.error("Error submitting quest:", error);
     }
-};
-
+  };
 
   return (
     <section className="w-full p-6">
@@ -205,7 +201,7 @@ export const AddQuest: FC = () => {
                 <Button
                   type="button"
                   variant="default"
-                  onClick={() => setIsModalOpen(true)}
+                  onClick={() => handleAddTaskClick(block.id)}
                   className="ml-4"
                 >
                   Add task <Plus size={16} className="ml-2" />
@@ -232,11 +228,11 @@ export const AddQuest: FC = () => {
             Add Quest <span className="text-xl">👾</span>
           </Button>
         </div>
-
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <AddTask onTaskSubmit={handleTaskSubmit} />
-        </Dialog>
       </form>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <AddTask onTaskSubmit={handleTaskSubmit} />
+      </Dialog>
     </section>
   );
 };

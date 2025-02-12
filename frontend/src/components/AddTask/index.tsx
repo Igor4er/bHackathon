@@ -1,20 +1,19 @@
-import { FC, FormEvent, useState } from "react";
+import { FC, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import { Button } from "@/components/ui/button";
 import {
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,16 +32,15 @@ export const AddTask: FC<AddTaskProps> = ({ onTaskSubmit }) => {
   const [options, setOptions] = useState(["Option 1", "Option 2"]);
   const [files, setFiles] = useState<{ [key: number]: File }>({});
   const [questionFile, setQuestionFile] = useState<File | null>(null);
-
   const [correctOption, setCorrectOption] = useState<number | null>(null);
   const [correctOptions, setCorrectOptions] = useState<number[]>([]);
   const [extendedAnswer, setExtendedAnswer] = useState("");
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-
+  const handleAddTask = () => {
     const questionId = uuidv4();
-    let formattedOptions: Array<{ text: string; is_correct: boolean }> | undefined;
+    let formattedOptions:
+      | Array<{ text: string; is_correct: boolean }>
+      | undefined;
 
     if (selectedType === "one") {
       formattedOptions = options.map((text, idx) => ({
@@ -68,6 +66,15 @@ export const AddTask: FC<AddTaskProps> = ({ onTaskSubmit }) => {
     };
 
     onTaskSubmit(formattedTask);
+
+    setTaskInput("");
+    setSelectedType("");
+    setOptions(["Option 1", "Option 2"]);
+    setFiles({});
+    setQuestionFile(null);
+    setCorrectOption(null);
+    setCorrectOptions([]);
+    setExtendedAnswer("");
   };
 
   const addOption = () => {
@@ -124,7 +131,7 @@ export const AddTask: FC<AddTaskProps> = ({ onTaskSubmit }) => {
           <DialogTitle className="mb-2">New Task ✨</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
+        <div>
           <div className="mb-2">
             <Label htmlFor="taskName" className="block mb-2 ml-1">
               Question
@@ -167,7 +174,7 @@ export const AddTask: FC<AddTaskProps> = ({ onTaskSubmit }) => {
           </div>
 
           <div className="mb-4 w-[200px]">
-            <Select onValueChange={setSelectedType}>
+            <Select onValueChange={setSelectedType} value={selectedType}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Choose type" />
               </SelectTrigger>
@@ -182,12 +189,10 @@ export const AddTask: FC<AddTaskProps> = ({ onTaskSubmit }) => {
           {selectedType === "one" && (
             <div className="mb-4">
               <Label className="block mb-2 ml-1">Options</Label>
-              <DialogDescription className="block mb-2 ml-1">
+              <div className="mb-2 ml-1 text-sm text-gray-600">
                 Choose the correct option.
-              </DialogDescription>
-              <RadioGroup
-                onValueChange={(val) => setCorrectOption(Number(val))}
-              >
+              </div>
+              <RadioGroup onValueChange={(val) => setCorrectOption(Number(val))}>
                 {options.map((option, index) => (
                   <div key={index} className="flex items-center gap-2 mb-2">
                     <RadioGroupItem
@@ -237,9 +242,9 @@ export const AddTask: FC<AddTaskProps> = ({ onTaskSubmit }) => {
           {selectedType === "several" && (
             <div className="mb-4">
               <Label className="block mb-2 ml-1">Options</Label>
-              <DialogDescription className="block mb-2 ml-1">
+              <div className="mb-2 ml-1 text-sm text-gray-600">
                 Select all correct options.
-              </DialogDescription>
+              </div>
               <div>
                 {options.map((option, index) => (
                   <div key={index} className="flex items-center gap-2 mb-2">
@@ -308,12 +313,12 @@ export const AddTask: FC<AddTaskProps> = ({ onTaskSubmit }) => {
 
           <DialogFooter>
             {selectedType && (
-              <Button type="submit">
+              <Button type="button" onClick={handleAddTask}>
                 Add <span className="text-xl">🧩</span>
               </Button>
             )}
           </DialogFooter>
-        </form>
+        </div>
       </DialogContent>
     </>
   );
