@@ -1,3 +1,4 @@
+import { CreateQuestRequest, Quest } from "@/@types/quest";
 import axios from "axios";
 
 const api = axios.create({
@@ -5,31 +6,7 @@ const api = axios.create({
   headers: { Accept: "application/json" },
 });
 
-export interface Option {
-  text: string;
-  is_correct: boolean;
-}
 
-export interface Question {
-  descr: string;
-  type: "choose";
-  options: Option[];
-}
-
-export interface QuestBody {
-  allow_changing_answers: boolean;
-  allow_switching_questions: boolean;
-  randomize_questions: boolean;
-  questions: Record<string, Question>;
-}
-
-export interface CreateQuestRequest {
-  name: string;
-  desc?: string;
-  quest_body: QuestBody[];
-  max_players: number;
-  max_attempts: number;
-}
 
 export const createQuest = async (
   quest: CreateQuestRequest
@@ -42,6 +19,48 @@ export const createQuest = async (
     return data;
   } catch (error: unknown) {
     let message = "Failed to create quest";
+    if (axios.isAxiosError(error)) {
+      message += `: ${error.response?.data?.detail || error.message}`;
+    }
+    console.error(message);
+    throw new Error(message);
+  }
+};
+
+export const getQuest = async (quest_id: number): Promise<Quest> => {
+  try {
+    const { data } = await api.get<Quest>(`/get/${quest_id}`);
+    return data;
+  } catch (error: unknown) {
+    let message = "Failed to get quest";
+    if (axios.isAxiosError(error)) {
+      message += `: ${error.response?.data?.detail || error.message}`;
+    }
+    console.error(message);
+    throw new Error(message);
+  }
+};
+
+export const getQuests = async (): Promise<Quest[]> => {
+  try {
+    const { data } = await api.get<Quest[]>(`/get/`);
+    return data;
+  } catch (error: unknown) {
+    let message = "Failed to get quests";
+    if (axios.isAxiosError(error)) {
+      message += `: ${error.response?.data?.detail || error.message}`;
+    }
+    console.error(message);
+    throw new Error(message);
+  }
+};
+
+export const deleteQuest = async (quest_id: number): Promise<string> => {
+  try {
+    const { data } = await api.delete<string>(`/delete/${quest_id}`);
+    return data;
+  } catch (error: unknown) {
+    let message = "Failed to delete quest";
     if (axios.isAxiosError(error)) {
       message += `: ${error.response?.data?.detail || error.message}`;
     }

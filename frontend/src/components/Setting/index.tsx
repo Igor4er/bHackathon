@@ -13,6 +13,10 @@ import { useDropzone } from "react-dropzone";
 import { updateUser, getUserData } from "@/services/api-login";
 import { uploadFile, urlAvatar } from "@/services/api-media";
 
+interface AvatarUrlResponse {
+  url: string;
+}
+
 export const Settings = () => {
   const [name, setName] = useState("Pedro Duarte");
   const [avatarPreview, setAvatarPreview] = useState<string | null>("");
@@ -28,10 +32,16 @@ export const Settings = () => {
         if (userData.avatar_url) {
           const shortUrl = userData.avatar_url.split("/").pop();
           if (shortUrl) {
-            const properAvatarUrl = await urlAvatar(shortUrl);
-            console.log(properAvatarUrl);
-            setAvatarUrl(userData.avatar_url);
-            setAvatarPreview(properAvatarUrl);
+            const properAvatarUrlObj = await urlAvatar(shortUrl);
+            if (
+              properAvatarUrlObj &&
+              typeof properAvatarUrlObj === "object" &&
+              "url" in properAvatarUrlObj
+            ) {
+              setAvatarPreview((properAvatarUrlObj as AvatarUrlResponse).url);
+            } else {
+              console.error("Invalid avatar URL object", properAvatarUrlObj);
+            }
           }
         }
       } catch (error) {
@@ -54,7 +64,6 @@ export const Settings = () => {
         const filename = new URL(uploadedUrl).pathname.split("/").pop();
         if (filename) {
           const properAvatarUrl = await urlAvatar(filename);
-          console.log(properAvatarUrl);
           setAvatarUrl(properAvatarUrl);
         }
       }

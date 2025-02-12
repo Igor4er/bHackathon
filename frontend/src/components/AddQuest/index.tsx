@@ -105,7 +105,6 @@ export const AddQuest: FC = () => {
         ],
       };
 
-      console.log("Submitting quest data:", questData);
 
       const response = await createQuest(questData);
       console.log("Quest created successfully:", response);

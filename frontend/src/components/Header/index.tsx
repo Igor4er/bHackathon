@@ -18,6 +18,10 @@ import { PATHNAMES } from "@/constants/routes";
 import { getUserData } from "@/services/api-login";
 import { urlAvatar } from "@/services/api-media";
 
+interface AvatarUrlResponse {
+  url: string;
+}
+
 export const Header: FC = () => {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [name, setName] = useState("Pedro Duarte");
@@ -28,15 +32,23 @@ export const Header: FC = () => {
     const fetchUserData = async () => {
       try {
         const accessToken = localStorage.getItem("access_token");
-        if (!accessToken) {
-          throw new Error("Access token is missing");
-        }
+        if (!accessToken) throw new Error("Access token is missing");
         const userData = await getUserData(accessToken);
-        console.log(userData);
         setName(userData.name);
         if (userData.avatar_url) {
-          const normalizedUrl = await urlAvatar(userData.avatar_url);
-          setAvatarPreview(normalizedUrl);
+          const shortUrl = userData.avatar_url.split("/").pop();
+          if (shortUrl) {
+            const properAvatarUrlObj = await urlAvatar(shortUrl);
+            if (
+              properAvatarUrlObj &&
+              typeof properAvatarUrlObj === "object" &&
+              "url" in properAvatarUrlObj
+            ) {
+              setAvatarPreview((properAvatarUrlObj as AvatarUrlResponse).url);
+            } else {
+              console.error("Invalid avatar URL object", properAvatarUrlObj);
+            }
+          }
         }
       } catch (error) {
         console.error("Failed to fetch user data:", error);
@@ -70,16 +82,10 @@ export const Header: FC = () => {
           <Link to="/popular-quests" className="text-gray-700 hover:text-black">
             • Popular Quests •
           </Link>
-          <Link
-            to="/completed-quests"
-            className="text-gray-700 hover:text-black"
-          >
+          <Link to="/completed-quests" className="text-gray-700 hover:text-black">
             • Completed Quests •
           </Link>
-          <Link
-            to="/popular-authors"
-            className="text-gray-700 hover:text-black"
-          >
+          <Link to="/popular-authors" className="text-gray-700 hover:text-black">
             • Popular Authors •
           </Link>
         </nav>
@@ -99,16 +105,14 @@ export const Header: FC = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onSelect={() => setOpenEditModal(true)}>
-              <Pencil size={16} />
-              Edit Profile
+              <Pencil size={16} /> Edit Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="flex items-center gap-2 text-red-500"
               onSelect={handleLogOut}
             >
-              <LogOut size={16} />
-              Log Out
+              <LogOut size={16} /> Log Out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
