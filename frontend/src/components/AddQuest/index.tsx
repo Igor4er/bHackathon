@@ -1,133 +1,241 @@
-import { FC, useState } from "react";
+import { FC, useState, ChangeEvent, FormEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
-
 import { AddTask } from "../AddTask";
-
 import { Minus, Plus, Pencil, Users, Clock } from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
+import { createQuest } from "@/services/api-quest";
+
+interface Block {
+  id: string;
+  name: string;
+}
+
+interface FormDataType {
+  name: string;
+  description: string;
+  maxPlayers: number;
+  timeLimit: number;
+  questBody?: Array<{
+    allow_changing_answers: boolean;
+    allow_switching_questions: boolean;
+    randomize_questions: boolean;
+    questions: Record<
+      string,
+      {
+        descr: string;
+        type: "choose" | "extended";
+        options?: Array<{
+          is_correct: boolean;
+          text: string;
+        }>;
+        answer?: string;
+        files?: { [key: number]: File };
+        questionFile?: File | null;
+      }
+    >;
+  }>;
+}
+
+const initialFormData: FormDataType = {
+  name: "",
+  description: "",
+  maxPlayers: 1,
+  timeLimit: 30,
+};
 
 export const AddQuest: FC = () => {
-  const [blocks, setBlocks] = useState([{ id: 1 }]);
-  const [openModal, setOpenModal] = useState(false);
+  const [blocks, setBlocks] = useState<Block[]>([{ id: uuidv4(), name: "" }]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState<FormDataType>(initialFormData);
+  const [tasks, setTasks] = useState<any[]>([]); 
 
   const handleAddBlock = () => {
-    setBlocks([...blocks, { id: blocks.length + 1 }]);
+    setBlocks((prevBlocks) => [...prevBlocks, { id: uuidv4(), name: "" }]);
   };
 
-  return (
-    <section className="w-full pt-6 pl-10 pr-10 pb-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">New Quest ⭐</h1>
-      </div>
+  const handleRemoveBlock = (blockId: string) => {
+    setBlocks((prevBlocks) => prevBlocks.filter((block) => block.id !== blockId));
+  };
 
-      <form>
-        <div className="mb-6">
-          <Label htmlFor="questName" className="block mb-2 ml-1">
+  const handleBlockNameChange = (blockId: string, name: string) => {
+    setBlocks((prevBlocks) =>
+      prevBlocks.map((block) => (block.id === blockId ? { ...block, name } : block))
+    );
+  };
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  const handleTaskSubmit = (taskData: any) => {
+    setTasks((prev) => [...prev, taskData]);
+    setIsModalOpen(false);
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    try {
+      if (!formData.name || !formData.maxPlayers || !formData.timeLimit) {
+        throw new Error("Please fill in all required fields");
+      }
+
+      const mergedQuestions = tasks.reduce((acc, task) => ({ ...acc, ...task }), {});
+
+      const questData = {
+        name: formData.name,
+        desc: formData.description,
+        max_players: formData.maxPlayers,
+        max_attempts: 3,
+        quest_body: [
+          {
+            allow_changing_answers: true,
+            allow_switching_questions: true,
+            randomize_questions: true,
+            questions: mergedQuestions,
+          },
+        ],
+      };
+
+      console.log("Submitting quest data:", questData);
+
+      const response = await createQuest(questData);
+      console.log("Quest created successfully:", response);
+
+      setFormData(initialFormData);
+      setTasks([]);
+      setBlocks([{ id: uuidv4(), name: "" }]);
+
+    } catch (error) {
+      console.error("Error submitting quest:", error);
+    }
+};
+
+
+  return (
+    <section className="w-full p-6">
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold">New Quest ⭐</h1>
+      </header>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <Label htmlFor="name" className="mb-2 ml-1 block">
             Name
           </Label>
           <div className="relative">
-            <Pencil
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-              size={20}
-            />
+            <Pencil className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
             <Input
-              id="questName"
+              id="name"
               placeholder="Enter the quest name"
-              className="w-full pl-10 text-[20px]"
+              className="pl-10 text-lg w-full"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
             />
           </div>
         </div>
 
-        <div className="mb-6">
-          <Label htmlFor="peopleCount" className="block mb-2 ml-1">
+        <div>
+          <Label htmlFor="maxPlayers" className="mb-2 ml-1 block">
             Number of people
           </Label>
           <div className="relative">
-            <Users
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-              size={20}
-            />
+            <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
             <Input
-              id="peopleCount"
-              placeholder="Enter the number of people"
+              id="maxPlayers"
               type="number"
-              className="w-full pl-10 text-[20px]"
+              min={1}
+              placeholder="Enter the number of people"
+              className="pl-10 text-lg w-full"
+              value={formData.maxPlayers}
+              onChange={handleInputChange}
+              required
             />
           </div>
         </div>
 
-        <div className="mb-8">
-          <Label htmlFor="time" className="block mb-2 ml-1">
-            Time
+        <div>
+          <Label htmlFor="timeLimit" className="mb-2 ml-1 block">
+            Time Limit (minutes)
           </Label>
           <div className="relative">
-            <Clock
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-              size={20}
-            />
+            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
             <Input
-              id="time"
-              placeholder="Enter time (in minutes)"
+              id="timeLimit"
               type="number"
-              className="w-full pl-10 text-[20px]"
+              min={1}
+              placeholder="Enter time (in minutes)"
+              className="pl-10 text-lg w-full"
+              value={formData.timeLimit}
+              onChange={handleInputChange}
+              required
             />
           </div>
         </div>
 
-        <div className="mb-4">
-          <div className="space-y-4">
-            <Label htmlFor="time" className="block text-xl ml-1">
-              Blocks
-            </Label>
-            {blocks.map((block) => (
-              <Card
-                key={block.id}
-                className="w-full shadow-lg border p-4 flex items-center justify-between"
-              >
-                <div className="flex items-center gap-2">
-                  <Minus size={36} className="text-gray-400 mr-2" />
-                  <Input placeholder="Enter block name" className="w-[500px]" />
-                </div>
-                <CardContent className="p-0">
-                  <Button
-                    variant="default"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setOpenModal(true);
-                    }}
+        <div className="space-y-4">
+          <Label className="text-xl ml-1 block">Blocks</Label>
+          {blocks.map((block) => (
+            <Card key={block.id} className="shadow-lg border">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-2 flex-1">
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveBlock(block.id)}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    Add task <Plus size={16} />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <Minus size={36} />
+                  </button>
+                  <Input
+                    placeholder="Enter block name"
+                    className="flex-1"
+                    value={block.name}
+                    onChange={(e) => handleBlockNameChange(block.id, e.target.value)}
+                    required
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={() => setIsModalOpen(true)}
+                  className="ml-4"
+                >
+                  Add task <Plus size={16} className="ml-2" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         <Button
-          className="flex items-center gap-2 bg-gray-200 text-gray-500 hover:bg-gray-300 hover:text-gray-700 mb-10"
-          variant="default"
           type="button"
+          variant="secondary"
           onClick={handleAddBlock}
+          className="flex items-center gap-2"
         >
-          New Block
-          <Plus size={16} />
+          New Block <Plus size={16} />
         </Button>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-4">
           <Button
-            className="flex items-center gap-2 w-[200px]"
-            variant="default"
+            type="submit"
+            className="w-[200px] flex items-center justify-center gap-2"
           >
             Add Quest <span className="text-xl">👾</span>
           </Button>
         </div>
 
-        <Dialog open={openModal} onOpenChange={(state) => setOpenModal(state)}>
-          <AddTask />
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <AddTask onTaskSubmit={handleTaskSubmit} />
         </Dialog>
       </form>
     </section>

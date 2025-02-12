@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Plus, LogOut, Pencil } from "lucide-react";
@@ -15,10 +15,36 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { PATHNAMES } from "@/constants/routes";
+import { getUserData } from "@/services/api-login";
+import { urlAvatar } from "@/services/api-media";
 
 export const Header: FC = () => {
   const [openEditModal, setOpenEditModal] = useState(false);
+  const [name, setName] = useState("Pedro Duarte");
+  const [avatarPreview, setAvatarPreview] = useState<string | null>("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const accessToken = localStorage.getItem("access_token");
+        if (!accessToken) {
+          throw new Error("Access token is missing");
+        }
+        const userData = await getUserData(accessToken);
+        console.log(userData);
+        setName(userData.name);
+        if (userData.avatar_url) {
+          const normalizedUrl = await urlAvatar(userData.avatar_url);
+          setAvatarPreview(normalizedUrl);
+        }
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   const handleCreateQuestClick = () => {
     navigate(PATHNAMES.ADDQUEST);
@@ -27,7 +53,7 @@ export const Header: FC = () => {
   const handleLogOut = () => {
     localStorage.removeItem("access_token");
     navigate(PATHNAMES.LOGIN);
-  }
+  };
 
   return (
     <header className="w-full border-b bg-white">
@@ -62,10 +88,13 @@ export const Header: FC = () => {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center gap-3 focus:outline-none">
               <Avatar>
-                <AvatarImage src="/user-avatar.jpg" alt="User Avatar" />
+                <AvatarImage
+                  src={avatarPreview || "/user-avatar.jpg"}
+                  alt="User Avatar"
+                />
                 <AvatarFallback>UA</AvatarFallback>
               </Avatar>
-              <span className="text-gray-800 font-medium">Username</span>
+              <span className="text-gray-800 font-medium">{name}</span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
@@ -74,7 +103,10 @@ export const Header: FC = () => {
               Edit Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center gap-2 text-red-500" onClick={handleLogOut}>
+            <DropdownMenuItem
+              className="flex items-center gap-2 text-red-500"
+              onSelect={handleLogOut}
+            >
               <LogOut size={16} />
               Log Out
             </DropdownMenuItem>

@@ -1,21 +1,33 @@
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import { AuthResponse, TokenResponse, UserData } from "@/@types/auth";
 import { PATHNAMES } from "@/constants/routes";
 import { NavigateFunction } from "react-router-dom";
 
+export interface EditProfil {
+  name: string;
+  avatar_url: string;
+}
 
 const api = axios.create({
   baseURL: "http://localhost:8000/auth",
   headers: { Accept: "application/json" },
 });
 
+const getStoredAccessToken = (): string => {
+  const token = localStorage.getItem("access_token");
+  if (!token) throw new Error("Access token is missing");
+  return token;
+};
+
 export const getAuthEmail = async (email: string): Promise<AuthResponse> => {
   try {
-    const { data } = await api.post(`/em/send`, null, { params: { email } });
+    const { data } = await api.post("/em/send", null, { params: { email } });
     return data;
-  } catch (error: any) {
-    console.error("Failed to fetch email auth data:", error.response?.data?.detail);
-    throw new Error("Failed to fetch email auth data");
+  } catch (error: unknown) {
+    let message = "Failed to fetch email auth data";
+    if (isAxiosError(error))
+      message += `: ${error.response?.data?.detail || error.message}`;
+    throw new Error(message);
   }
 };
 
@@ -24,11 +36,13 @@ export const getAccessTokenEmail = async (
   state: string
 ): Promise<TokenResponse> => {
   try {
-    const { data } = await api.get(`/em/token`, { params: { code, state } });
+    const { data } = await api.get("/em/token", { params: { code, state } });
     return data;
-  } catch (error) {
-    console.error("Failed to fetch email access token:", error);
-    throw new Error("Failed to fetch email access token");
+  } catch (error: unknown) {
+    let message = "Failed to fetch email access token";
+    if (isAxiosError(error))
+      message += `: ${error.response?.data || error.message}`;
+    throw new Error(message);
   }
 };
 
@@ -43,7 +57,7 @@ export const handleAuthRedirectEmail = async (
     const userData = await getUserData(access_token);
     navigate(PATHNAMES.HOME);
     return userData;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Authentication failed:", error);
     return null;
   }
@@ -53,9 +67,11 @@ const getAuthData = async (provider: "gh" | "google"): Promise<AuthResponse> => 
   try {
     const { data } = await api.get(`/${provider}/link`);
     return data;
-  } catch (error) {
-    console.error(`Failed to fetch ${provider} auth data:`, error);
-    throw new Error(`Failed to fetch ${provider} auth data`);
+  } catch (error: unknown) {
+    let message = `Failed to fetch ${provider} auth data`;
+    if (isAxiosError(error))
+      message += `: ${error.response?.data || error.message}`;
+    throw new Error(message);
   }
 };
 
@@ -67,21 +83,25 @@ const getAccessToken = async (
   try {
     const { data } = await api.get(`/${provider}/token`, { params: { code, state } });
     return data;
-  } catch (error) {
-    console.error("Failed to fetch access token:", error);
-    throw new Error("Failed to fetch access token");
+  } catch (error: unknown) {
+    let message = "Failed to fetch access token";
+    if (isAxiosError(error))
+      message += `: ${error.response?.data || error.message}`;
+    throw new Error(message);
   }
 };
 
-const getUserData = async (accessToken: string): Promise<UserData> => {
+export const getUserData = async (accessToken: string): Promise<UserData> => {
   try {
     const { data } = await api.get("/me", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     return data;
-  } catch (error) {
-    console.error("Failed to fetch user data:", error);
-    throw new Error("Failed to fetch user data");
+  } catch (error: unknown) {
+    let message = "Failed to fetch user data";
+    if (isAxiosError(error))
+      message += `: ${error.response?.data || error.message}`;
+    throw new Error(message);
   }
 };
 
@@ -93,9 +113,11 @@ export const loginWithProvider = async (provider: "gh" | "google"): Promise<void
     const { url } = await getAuthData(provider);
     if (!url) throw new Error("Authentication URL is undefined");
     window.location.href = url;
-  } catch (error) {
-    console.error(`${provider} login failed:`, error);
-    throw error;
+  } catch (error: unknown) {
+    let message = `${provider} login failed`;
+    if (isAxiosError(error))
+      message += `: ${error.response?.data || error.message}`;
+    throw new Error(message);
   }
 };
 
@@ -106,7 +128,6 @@ export const handleAuthRedirect = async (
 ): Promise<UserData | null> => {
   const provider = localStorage.getItem("provider") as "gh" | "google";
   if (!code || !state || !provider) return null;
-
   try {
     const { access_token } = await getAccessToken(code, state, provider);
     localStorage.setItem("access_token", access_token);
@@ -114,7 +135,7 @@ export const handleAuthRedirect = async (
     const userData = await getUserData(access_token);
     navigate(PATHNAMES.HOME);
     return userData;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Authentication failed:", error);
     return null;
   }
@@ -122,3 +143,18 @@ export const handleAuthRedirect = async (
 
 export const loginWithGitHub = () => loginWithProvider("gh");
 export const loginWithGoogle = () => loginWithProvider("google");
+
+export const updateUser = async (data: EditProfil): Promise<UserData> => {
+  try {
+    const accessToken = getStoredAccessToken();
+    const { data: responseData } = await api.patch("/profile", data, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return responseData;
+  } catch (error: unknown) {
+    let message = "Failed to update user data";
+    if (isAxiosError(error))
+      message += `: ${error.response?.data?.detail || error.message}`;
+    throw new Error(message);
+  }
+};

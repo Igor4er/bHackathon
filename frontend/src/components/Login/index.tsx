@@ -1,9 +1,5 @@
-// import { Input } from "@/components/ui/input";
 import { FC } from "react";
-// import GoogleIcon from "@/assets/icon/google.svg";
 import { LoginForm } from "../login-form";
-
-// TODO: refactor design 
 
 export const Login: FC = () => {
   return (

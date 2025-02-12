@@ -16,7 +16,7 @@ export  interface AuthResponse {
   }
   
   export  interface UserData {
-    id: string;
-    email: string;
-    name: string;
+      name: string,
+      email: string,
+      avatar_url: string
   }
