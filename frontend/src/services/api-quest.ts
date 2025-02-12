@@ -2,15 +2,11 @@ import { CreateQuestRequest, Quest } from "@/@types/quest";
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/quests",
+  baseURL: "https://bh-back.ihorcher.com/quests",
   headers: { Accept: "application/json" },
 });
 
-
-
-export const createQuest = async (
-  quest: CreateQuestRequest
-): Promise<any> => {
+export const createQuest = async (quest: CreateQuestRequest): Promise<any> => {
   try {
     const accessToken = localStorage.getItem("access_token");
     const { data } = await api.post("/create", quest, {

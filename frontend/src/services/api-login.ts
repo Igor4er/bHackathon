@@ -9,7 +9,7 @@ export interface EditProfil {
 }
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/auth",
+  baseURL: "https://bh-back.ihorcher.com/auth",
   headers: { Accept: "application/json" },
 });
 
@@ -33,7 +33,7 @@ export const getAuthEmail = async (email: string): Promise<AuthResponse> => {
 
 export const getAccessTokenEmail = async (
   code: string,
-  state: string
+  state: string,
 ): Promise<TokenResponse> => {
   try {
     const { data } = await api.get("/em/token", { params: { code, state } });
@@ -49,7 +49,7 @@ export const getAccessTokenEmail = async (
 export const handleAuthRedirectEmail = async (
   code: string,
   state: string,
-  navigate: NavigateFunction
+  navigate: NavigateFunction,
 ): Promise<UserData | null> => {
   try {
     const { access_token } = await getAccessTokenEmail(code, state);
@@ -63,7 +63,9 @@ export const handleAuthRedirectEmail = async (
   }
 };
 
-const getAuthData = async (provider: "gh" | "google"): Promise<AuthResponse> => {
+const getAuthData = async (
+  provider: "gh" | "google",
+): Promise<AuthResponse> => {
   try {
     const { data } = await api.get(`/${provider}/link`);
     return data;
@@ -78,10 +80,12 @@ const getAuthData = async (provider: "gh" | "google"): Promise<AuthResponse> => 
 const getAccessToken = async (
   code: string,
   state: string,
-  provider: "gh" | "google"
+  provider: "gh" | "google",
 ): Promise<TokenResponse> => {
   try {
-    const { data } = await api.get(`/${provider}/token`, { params: { code, state } });
+    const { data } = await api.get(`/${provider}/token`, {
+      params: { code, state },
+    });
     return data;
   } catch (error: unknown) {
     let message = "Failed to fetch access token";
@@ -105,7 +109,9 @@ export const getUserData = async (accessToken: string): Promise<UserData> => {
   }
 };
 
-export const loginWithProvider = async (provider: "gh" | "google"): Promise<void> => {
+export const loginWithProvider = async (
+  provider: "gh" | "google",
+): Promise<void> => {
   try {
     const state = `oauth:${Math.random().toString(36).substring(7)}`;
     localStorage.setItem("state", state);
@@ -124,7 +130,7 @@ export const loginWithProvider = async (provider: "gh" | "google"): Promise<void
 export const handleAuthRedirect = async (
   code: string,
   state: string,
-  navigate: NavigateFunction
+  navigate: NavigateFunction,
 ): Promise<UserData | null> => {
   const provider = localStorage.getItem("provider") as "gh" | "google";
   if (!code || !state || !provider) return null;
