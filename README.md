@@ -1,4 +1,5 @@
 # Ті самі Львівські студенти
+<a href="https://bh.ihorcher.com">Перейти на сайт (bh.ihorcher.com)</a>
 ## Зміст
 1. [Ключові особливості](#key-features)
 2. [Як запустити локально](#run-locally)
